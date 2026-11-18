@@ -1,0 +1,35 @@
+WHAT IF YOUR MIRROR SHOWED YOU IN 10 YEARS? — third-party assets and licences
+
+Voices
+  Kokoro-82M text-to-speech (hexgrad), run offline through kokoro-onnx — Apache License 2.0.
+  Voices used: bm_fable (narrator), bf_emma (Nan), am_michael (the panel).
+  Theo: Microsoft neural voice en-US-AndrewNeural, generated through Microsoft's online speech service
+  with edge-tts (rany2/edge-tts, GPL-3.0 tool). Microsoft's terms apply to the voice; check them before commercial use.
+  All voices are synthetic. Speech check: faster-whisper base.en (MIT).
+
+Music (original score written for this film, rendered from these sample libraries)
+  VS Chamber Orchestra: Community Edition, Versilian Studios / Sam Gossner — CC0 1.0
+    (strings — arco and pizzicato; flute, clarinet, oboe; French horn; timpani)
+    https://github.com/sgossner/VSCO-2-CE
+  Versilian Community Sample Library (VCSL) — CC0 1.0
+    (concert harp, glockenspiel, vibraphone, suspended cymbal)
+    https://github.com/sgossner/VCSL
+  FreePats — CC0 1.0 (glass harp)
+    https://freepats.zenvoid.org
+
+Sound effects and ambience
+  Synthesised procedurally (numpy/scipy) for this film. No recordings.
+
+Fonts (self-hosted)
+  Cinzel — The Cinzel Project Authors (Natanael Gama) — SIL Open Font License 1.1 (fonts/OFL-Cinzel.txt)
+  Cormorant Garamond — The Cormorant Project Authors (Christian Thalmann) — SIL Open Font License 1.1 (fonts/OFL-CormorantGaramond.txt)
+
+Software
+  three.js r170 — MIT License.
+
+Pictures
+  Every image in the film (the town, the rooms, the characters, the postcard, the textures) is drawn in code for this film.
+  No photographs, footage or generated images.
+
+Facts
+  Sources for the facts stated in the narration: FACTS.md.

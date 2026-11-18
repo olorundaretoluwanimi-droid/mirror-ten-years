@@ -1,0 +1,10 @@
+out/
+stills/
+out_s*.jpg
+voices/*.wav
+voices/.cache/
+*.mp4
+__pycache__/
+voices/_kokoro/
+voices/_edge/
+voice-audition/
