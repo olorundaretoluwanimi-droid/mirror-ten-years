@@ -55,16 +55,16 @@ wind = bp(np.roll(NZ, 2222), 200, 1400) * (.4 + .6 * np.sin(2 * np.pi * .07 * tt
 hallTone = lp(np.roll(BR, 55), 120) * .8 + bp(np.roll(NZ, 909), 200, 900) * .04
 bulbBuzz = (np.sin(2 * np.pi * 100 * tt) + .4 * np.sin(2 * np.pi * 200 * tt) + .2 * np.sin(2 * np.pi * 300 * tt)) * .12
 stationHum = lp(np.roll(BR, 3131), 200) * .6 + bp(np.roll(NZ, 4141), 300, 2000) * .06
-BATH = [(2.0, 27.5), (37.5, 80), (150, 157), (175, 182), (200, 262), (300, 330), (350, 392), (420, 430), (490, 496)]
+BATH = [(2.0, 27.5), (37.5, 80), (150, 157), (175, 182), (200, 262), (300, 330), (350, 392), (420, 430), (495, 501)]
 g_bath = gate(*BATH, fi=.4, fo=.4)
 g_bathBirds = gate((2.0, 27.5), (150, 157), (175, 182), (200, 212), (300, 305), (420, 430), fi=1, fo=.4)
-g_flat = gate((80, 100), (182, 200), (430, 446), fi=.4, fo=.4)
+g_flat = gate((80, 100), (182, 200), (392, 420), (430, 446), fi=.4, fo=.4)
 g_nan = gate((99.6, 150), (329.2, 350), fi=.6, fo=.4)       # J-cut: the knock is heard before the cut
-g_street = gate((27.5, 37.5), (157, 175), (392, 420), fi=.6, fo=.4)
-g_roof = gate((262, 300), fi=.6, fo=.6)
+g_street = gate((27.5, 37.5), (157, 175), fi=.6, fo=.4)
+g_roof = gate((262, 297.6), fi=.6, fo=1.6)
 g_train = gate((444.0, 462), fi=2.0, fo=.4)                  # J-cut from the doorway
-g_hall = gate((462, 490), fi=.4, fo=.4)
-g_sea = gate((496, 555), fi=1.0, fo=1.5)
+g_hall = gate((462, 495), fi=.4, fo=.4)
+g_sea = gate((501, 555), fi=1.0, fo=1.5)
 g_buzz = gate((305.0, 330), fi=.05, fo=.4)
 amb = (stereo(roomTone * (g_bath + g_flat + g_nan) * .8, 0) + stereo(pipes * g_bath, .35) + stereo(drip * g_bath * .5, .25)
        + stereo(birds * (g_bathBirds * .35 + g_street * .7 + g_flat * .2), -.3) + stereo(np.roll(birds, 9001) * (g_street * .6), .35)
@@ -75,6 +75,8 @@ amb = (stereo(roomTone * (g_bath + g_flat + g_nan) * .8, 0) + stereo(pipes * g_b
        )
 # the empty glass: everything stops at 305.0 for three seconds; only the bulb's buzz is left
 amb *= (1 - gate((305.0, 308.6), fi=.02, fo=1.2))[:, None]
+amb *= (1 - .8 * gate((293.4, 300), fi=.05, fo=.4))[:, None]          # Nan's light goes out: the night goes quiet
+amb *= (1 - .6 * gate((476.0, 484.4), fi=.02, fo=.8))[:, None]        # the snapped string: the hall holds its breath
 amb += stereo(bulbBuzz * g_buzz, .1)
 
 # —— Foley ——
@@ -103,6 +105,20 @@ def flashFx(v=1.0, d=3.2):
     rise = bp(noise(d), 2000, 10000) * np.exp(-((x - .2) / .25) ** 2)
     return norm(out * .5 + rise * .8) * v
 def postbox(v=1.0): o = np.zeros(int(.8 * SR)); place_m(o, bp(noise(.15), 600, 5000) * np.exp(-t_(.15) / .03), 0); place_m(o, clack(.8, .7)[:int(.4 * SR)], .25); return norm(o) * v
+def cough(v=1.0, far=False):
+    o = np.zeros(int(.7 * SR))
+    for k, (d, f) in enumerate([(.16, 1.0), (.12, .8)]):
+        x = t_(d); b = bp(noise(d), 250, 2600) * np.exp(-x / .05) * np.minimum(1, x / .006) + np.sin(2 * np.pi * 180 * x) * np.exp(-x / .03) * .25
+        place_m(o, b * f, k * .24)
+    o = norm(o) * v
+    return lp(o, 2200) * .8 if far else o
+def snapFx(v=1.0):   # a cello string breaking: a crack, then the string's slack twang falling away
+    d = 1.4; x = t_(d)
+    crack = bp(noise(d), 2500, 11000) * np.exp(-x / .006) * 1.6
+    f = 196 * (1 - .45 * (1 - np.exp(-x / .08))); tw = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-x / .25) + .4 * np.sin(2 * np.pi * np.cumsum(f * 2.02) / SR) * np.exp(-x / .15)
+    return norm(crack + tw * .7) * v
+def scrape(v=1.0, d=.5): x = t_(d); return norm(bp(noise(d), 500, 3200) * (1 + .6 * np.sin(2 * np.pi * 31 * x)) * np.sin(np.pi * x / d)) * v
+def lightOff(v=1.0): o = np.zeros(int(.6 * SR)); place_m(o, click(1.4, 1), 0); x = t_(.4); place_m(o, np.sin(2 * np.pi * 100 * x) * np.exp(-x / .06) * .3, .01); return norm(o) * v
 def chairFx(v=1.0): o = np.zeros(int(.8 * SR)); place_m(o, creak(.6)[:int(.6 * SR)], 0); place_m(o, thump(.5, 120)[:int(.2 * SR)], .1); return norm(o) * v
 
 STEP = {'tile': stepT, 'wood': stepW, 'pave': stepP, 'stage': stepW}
@@ -116,7 +132,7 @@ for e in EV:
     elif k == 'knock': place(fx, knock(.55), t0, -.3)
     elif k == 'postbox': place(fx, postbox(.5), t0, .1)
     elif k == 'latch': place(fx, latch(.5), t0, .1)
-    elif k == 'thump': place(fx, thump(1, 70)[:int(.35 * SR)] * .6, t0, .6)
+    elif k == 'thump': place(fx, thump(1, 62)[:int(.4 * SR)] * .9, t0, .6)
     elif k == 'window': place(fx, windowPop(.22), t0, rng.uniform(-.8, .8))
     elif k == 'flicker': place(fx, flickerFx(.35), t0, .1)
     elif k == 'cloth': place(fx, cloth(.35), t0, 0)
@@ -124,7 +140,11 @@ for e in EV:
     elif k == 'trainIn': place(fx, wheels(18.0, .4), t0, 0)
     elif k == 'chair': place(fx, chairFx(.4), t0, 0)
     elif k == 'flash': place(fx, flashFx(.6), t0 - .25, 0)
-    elif k == 'yawn': pass
+    elif k == 'cough': far = 289 < t0 < 294; place(fx, cough(.3 if far else .42, far), t0, .45 if far else .15)
+    elif k == 'snap': place(fx, snapFx(.75), t0, 0)
+    elif k == 'scrape': place(fx, scrape(.35), t0 - .3, 0)
+    elif k == 'lightOff': place(fx, lightOff(.3), t0, .4)
+    elif k in ('yawn', 'sting'): pass
 # breath of the man in the empty glass? no: a single heartbeat in the silence
 place(fx, heartbeat(.3), 306.4)
 
@@ -140,7 +160,7 @@ for k, t0 in VT.items():
     y = compress(norm(y, .9), thr=.25, ratio=3.2)
     act = np.abs(y) > .02 * np.abs(y).max(); y = y * (10 ** (-20 / 20)) / (np.sqrt(np.mean(y[act] ** 2)) + 1e-9)
     if k in DLG: y = lp(y, 7000) * 1.05
-    if k.startswith('a') and 288 < t0 < 291: y = lp(y, 4500) * .8          # Nan from her balcony, further off
+    if k.startswith('a') and 286 < t0 < 289: y = lp(y, 4500) * .8          # Nan from her balcony, further off
     pan = -.12 if k.startswith('t') else .15 if k[0] in 'ap' else 0
     place(vo, y, t0, pan); s = int(t0 * SR); vmask[s:s + len(y)] = 1
 
@@ -151,11 +171,10 @@ duck = uniform_filter1d(vmask, int(.35 * SR)); mus *= (1 - .2 * np.clip(duck * 1
 
 def lvl(x, db): sel = np.abs(x).sum(1) > 1e-4; r = np.sqrt(np.mean(x[sel] ** 2)) if sel.any() else 1; return x * (10 ** (db / 20)) / (r + 1e-9)
 voS = lvl(vo, -17); musS = lvl(mus, -21); ambS = lvl(amb, -32); fxS = lvl(fx, -27)
-keys = [(0, 1.0)]
-for k, t0 in sorted(VT.items(), key=lambda kv: kv[1]):
+bedG = np.ones(N)
+for k, t0 in sorted(VT.items(), key=lambda kv: kv[1]):   # each line dips the bed just enough for 10 dB; overlapping dips take the deeper one
     a, b = int(t0 * SR), int((t0 + Dd[k]) * SR); need = rms_db(voS[a:b]) - 10 - rms_db((musS + ambS + fxS)[a:b]) - 1.5; g = min(1.0, 10 ** (need / 20))
-    keys += [(t0 - .35, 1.0), (t0 - .05, g), (t0 + Dd[k] + .1, g), (t0 + Dd[k] + .6, 1.0)]
-keys.sort(); gk = np.array(keys); bedG = np.interp(tt, gk[:, 0], gk[:, 1])
+    env = np.interp(tt, [t0 - .35, t0 - .05, t0 + Dd[k] + .1, t0 + Dd[k] + .6], [1.0, g, g, 1.0]); bedG = np.minimum(bedG, env)
 musS *= bedG[:, None]; ambS *= (.2 + .8 * bedG)[:, None]; fxS *= (.45 + .55 * bedG)[:, None]
 mix = voS + musS + ambS + fxS
 pk = np.abs(mix).max(); mix = np.tanh(mix / max(pk, 1e-6) * 1.2) * .9

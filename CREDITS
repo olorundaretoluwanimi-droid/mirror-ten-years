@@ -1,10 +1,9 @@
 WHAT IF YOUR MIRROR SHOWED YOU IN 10 YEARS? — third-party assets and licences
 
 Voices
-  Kokoro-82M text-to-speech (hexgrad), run offline through kokoro-onnx — Apache License 2.0.
-  Voices used: bm_fable (narrator), bf_emma (Nan), am_michael (the panel).
-  Theo: Microsoft neural voice en-US-AndrewNeural, generated through Microsoft's online speech service
-  with edge-tts (rany2/edge-tts, GPL-3.0 tool). Microsoft's terms apply to the voice; check them before commercial use.
+  Microsoft neural voices, generated through Microsoft's online speech service with edge-tts (rany2/edge-tts, GPL-3.0 tool):
+  en-US-BrianMultilingualNeural (narrator), en-US-AndrewNeural (Theo), en-GB-SoniaNeural (Nan), en-GB-ThomasNeural (the panel).
+  Microsoft's terms apply to the voices; check them before commercial use.
   All voices are synthetic. Speech check: faster-whisper base.en (MIT).
 
 Music (original score written for this film, rendered from these sample libraries)

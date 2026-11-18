@@ -77,20 +77,20 @@ function titleCard(t, a, b, lines, sub, size) {
   return [{ id: 'title' + a, text: lines.join(' ') + ' ' + (sub || ''), x0: 260, y0: y0 - size, x1: 1660, y1: oy + 100 }];
 }
 
-// —— Morning counter (top right): MORNING n; ticks with a pale flash ——
+// —— Countdown (top right): DAYS LEFT n, then AUDITION DAY; ticks with a pale flash ——
 function chip(t, c) {
   const al = ss(seg(t, c.a, c.a + .3)) * (1 - ss(seg(t, c.b - .3, c.b)));
   if (al <= 0) return null;
-  const { n } = chipState(c, t), txt = 'MORNING ' + n;
+  const { n } = chipState(c, t), txt = n > 0 ? 'DAYS LEFT ' + n : 'AUDITION DAY';
   const fl = t - c.a < .6 ? 1 - (t - c.a) / .6 : 0;
-  g.save(); g.font = '700 30px Cinzel'; const tw = g.measureText('MORNING 00').width + 6 * 10;
+  g.save(); g.font = '700 30px Cinzel'; const tw = g.measureText(c.n0 > 0 ? 'DAYS LEFT 00' : 'AUDITION DAY').width + 6 * 12;
   const bw = tw + 64, bh = 64, x = W - bw - 64, y = 60;
   g.globalAlpha = al; plate(x, y, bw, bh);
   if (fl > 0) { g.globalAlpha = al * fl * .4; g.fillStyle = '#fff2c8'; g.fillRect(x + 2, y + 2, bw - 4, bh - 4); g.globalAlpha = al; }
   g.fillStyle = '#f0e2bc'; g.textAlign = 'left'; g.textBaseline = 'middle'; spacedLeft(txt, x + 30, y + bh / 2 + 1, 2);
   g.restore();
   const spinning = c.run && t >= c.run[0] && t < c.run[1];
-  return { id: 'chip' + c.a + (spinning ? 'run' : ''), text: spinning ? 'MORNING counter running' : txt, x0: x, y0: y, x1: x + bw, y1: y + bh };
+  return { id: 'chip' + c.a + (spinning ? 'run' : ''), text: spinning ? 'DAYS LEFT counter running' : txt, x0: x, y0: y, x1: x + bw, y1: y + bh };
 }
 
 // —— Dialogue box ——
@@ -123,7 +123,7 @@ function subtitle(t, v) {
   g.save(); g.globalAlpha = al; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.font = 'italic 500 50px "Cormorant Garamond"';
   const lines = g.measureText(v.sub).width > 1500 ? wrap(v.sub, 1300) : [v.sub];
   const y1 = H - 84, y0 = y1 - (lines.length - 1) * 58, tw = Math.max(...lines.map(L => g.measureText(L).width));
-  const sh = g.createLinearGradient(0, y0 - 70, 0, y1 + 40); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(.5, 'rgba(0,0,0,.42)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+  const sh = g.createLinearGradient(0, y0 - 70, 0, y1 + 40); sh.addColorStop(0, 'rgba(0,0,0,0)'); sh.addColorStop(.5, 'rgba(0,0,0,.52)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
   g.fillStyle = sh; g.fillRect(W / 2 - tw / 2 - 160, y0 - 70, tw + 320, y1 - y0 + 110);
   g.shadowColor = 'rgba(0,0,0,.9)'; g.shadowBlur = 10; g.shadowOffsetY = 2; g.fillStyle = PAPER;
   lines.forEach((L, i) => g.fillText(L, W / 2, y0 + i * 58));
@@ -132,7 +132,7 @@ function subtitle(t, v) {
 }
 
 // —— Fades: dips to black between places; the white of the glass at the signature push ——
-const FADES = [[27.5, .45, .5], [37.5, .4, .5], [100, .3, .3], [150, .45, .5], [300, .45, .5], [330, .3, .3], [392, .45, .5], [420, .3, .3], [446, .45, .6], [462, .45, .5], [490, .45, .5], [541, .5, .6]];
+const FADES = [[37.5, .4, .5], [100, .3, .3], [150, .45, .5], [300, 2.6, .5], [330, .3, .3], [392, .45, .5], [420, .3, .3], [446, .45, .6], [462, .45, .5], [495, .45, .5], [541, .5, .6]];   // 27.5: a hard cut to the title
 function blackout(t) {
   let a = 1 - ss(seg(t, 0, .8));
   for (const [c, o, i] of FADES) { if (t < c && t > c - o) a = Math.max(a, ss((t - (c - o)) / o)); if (t >= c && t < c + i) a = Math.max(a, 1 - ss((t - c) / i)); }

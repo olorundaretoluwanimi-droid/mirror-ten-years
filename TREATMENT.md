@@ -1,3 +1,22 @@
+# The dramatic cut (version 2)
+
+The first version was gentle; this one has stakes. Same idea, same sets, same style, rebuilt for tension:
+
+- **The hook.** On the first morning the man in the glass stops copying Theo. He stares, then lifts his palm to the glass. Hard cut to the title on a hit.
+- **The lag.** "Left hand": the reflection follows, a moment too late.
+- **The evidence.** In the room behind the glass: the office badge, the dusty cello, and an audition poster crossed out in red.
+- **The wound.** "He looked like he'd given up." "On what?" "On me." Nan coughs as he leaves.
+- **The clock.** Port Alder Orchestra, auditions in seventy days. A DAYS LEFT counter runs to AUDITION DAY under a pizzicato clock.
+- **The setback.** The first practice goes wrong: the neighbour bangs on the wall, the music stops dead. Next morning the man in the glass turns away. "Look at me!"
+- **The cliffhanger.** On the roof the town lights up for him; Nan calls out, coughs, and her light goes out. "Nan? Nan!" Black.
+- **The empty glass.** Nobody lives here in ten years. Nan, in her chair under a blanket: "Don't you dare stay for me. Did you look properly?" The postcard: the future moved, but only if he goes.
+- **The last night**, the train, and the audition: mid-solo the A string snaps. Silence and a heartbeat. "Would you like to stop?" "No. I'm not stopping." He plays on; the orchestra rises under him.
+- **The payoff.** Ten years later, by the sea, the man in the glass waves first.
+
+Voices are all Microsoft neural voices (Brian, narrator; Andrew, Theo; Sonia, Nan; Thomas, the panel). Characters are drawn at twice the pixel detail (eyes with catch-lights, lids, brows, lips, hair strands, clothing folds) in the same style. The score moves to D minor with hard stops into silence; D major only on the roof, the postcard and the sea.
+
+---
+
 # What If Your Mirror Showed You in 10 Years? — Treatment
 
 2.5D Pixel Art · 9 min 15 s (555 s) · 1920×1080, 30 fps · English · tone: wonder

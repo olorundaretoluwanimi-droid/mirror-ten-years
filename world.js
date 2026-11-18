@@ -98,6 +98,15 @@ function plant(scale = 1, seed = 1) {
 }
 function picture(w, h, draw) { const c = TT(Math.round(w * 40), Math.round(h * 40), draw); const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), stdM({ map: texOf(c) })); return m; }
 // The postcard from Port Alder: sea, a hall with a green dome, the name
+function posterTex(crossed) {   // PORT ALDER / ORCHESTRA / AUDITIONS, and in the future that gave up: a red X
+  const P = new PX(21, 28), bg = ramp(['#0e2a3c', '#123a52', '#1a4a66'], .45);
+  P.fill((x, y) => bg(.5 + (h2(x, y, 9) - .5) * .25, x, y));
+  for (const [y, w, c] of [[3, 15, [240, 230, 200]], [6, 11, [240, 230, 200]], [10, 13, [216, 200, 144]], [17, 15, [255, 208, 112]], [19, 9, [255, 208, 112]]]) for (let x = 0; x < w; x++) if ((x * 7 + y) % 5) P.set(3 + x, y, c);
+  P.rect(8, 12, 5, 3, [80, 140, 110]); P.rect(9, 11, 3, 1, [80, 140, 110]);
+  for (let y = 22; y < 25; y++) for (let x = 4; x < 17; x += 2) P.set(x, y, [150, 170, 190]);
+  if (crossed) for (let i = 0; i < 26; i++) { const x = Math.round(1 + i * 18 / 25), y = 1 + i; for (const d of [0, 1]) { P.set(x + d, y, [200, 30, 30]); P.set(19 - x + d, y, [200, 30, 30]); } }
+  return texOf(P.done());
+}
 function postcardTex() {
   const P = new PX(40, 28), sky_ = ramp(['#7ab0d8', '#a8d0ea', '#d8ecf4'], .45), seaR = ramp(['#1a4a6a', '#2a6a8a', '#4a8aa8'], .45);
   P.fill((x, y) => { const b = Math.min(x, y, 39 - x, 27 - y); if (b < 1) return [236, 230, 214]; if (y < 15) return sky_(1 - y / 15, x, y); return seaR(.4 + (h2(x, y, 3) - .5) * .4 + ((x + y * 3) % 7 === 0 ? .3 : 0), x, y); });
@@ -157,7 +166,7 @@ function bathroom(o) {
   const hook = new THREE.Group(); g.add(hook); hook.position.set(-BW / 2 + .02, 1.5, -.35);
   const strap = box(.01, .4, .02, stdM({ color: '#284c90' }), { cast: false }); strap.position.y = -.4; hook.add(strap);
   const card = box(.01, .12, .09, stdM({ color: '#e8eaee', emissive: C('#e8eaee'), emissiveIntensity: .15 }), { cast: false }); card.position.y = -.52; hook.add(card); R.badge = hook;
-  const sheet = new THREE.Mesh(new THREE.PlaneGeometry(.21, .28), stdM({ color: '#ece6d6' })); sheet.position.set(-BW / 2 + .01, 1.25, -.4); sheet.rotation.y = Math.PI / 2; g.add(sheet); R.sheet = sheet; sheet.visible = false;
+  const sheet = new THREE.Mesh(new THREE.PlaneGeometry(.4, .54), stdM({ map: posterTex(true), emissive: C('#ffffff'), emissiveMap: posterTex(true), emissiveIntensity: .12 })); sheet.position.set(-BW / 2 + .01, 1.3, -.55); sheet.rotation.y = Math.PI / 2; g.add(sheet); R.sheet = sheet; sheet.visible = false;
   const pc = new THREE.Mesh(new THREE.PlaneGeometry(.2, .14), stdM({ map: postcardTex(), emissive: C('#ffffff'), emissiveMap: postcardTex(), emissiveIntensity: .25 })); pc.rotation.y = -Math.PI / 2; pc.rotation.x = .08; g.add(pc); pc.visible = false; R.postcard = pc;
   const boxes = new THREE.Group(); g.add(boxes); boxes.visible = false; R.boxes = boxes;
   [[.5, .4, .5, -.4, .3, 5], [.4, .35, .45, -.9, .35, 6], [.45, .3, .4, -.6, -.1, 7]].forEach(([w, h, d, x, z, s]) => { const b = cardboard(w, h, d, s); b.position.set(x, 0, z); boxes.add(b); });
@@ -379,10 +388,10 @@ export function buildWorld() {
   const theo = makeChar('hero', 'theo'), theoS = makeChar('hero', 'fut2', { tag: 'theo34' });
   const theoScarf = makeChar('hero', 'theoS', { tag: 'theoScarf' });
   const fut = { fut0: makeChar('hero', 'fut0'), fut0b: makeChar('hero', 'fut0b'), fut1: makeChar('hero', 'fut1'), fut2: makeChar('hero', 'fut2'), fut3: makeChar('hero', 'fut3'), young: makeChar('hero', 'theo', { tag: 'young' }) };
-  const nan = makeChar('nan', 'nan');
+  const nan = makeChar('nan', 'nan'), nanB = makeChar('nan', 'nanB', { tag: 'nanB' });
   const panel = ['t3', 't1', 't6'].map(l => makeChar('folk', l));
   const folk = ['t1', 't2', 't4', 't5', 't7', 't8'].map(l => makeChar('folk', l));
-  const all = [theo, theoS, theoScarf, ...Object.values(fut), nan, ...panel, ...folk];
+  const all = [theo, theoS, theoScarf, ...Object.values(fut), nan, nanB, ...panel, ...folk];
   all.forEach(c => { scene.add(c.root); c.root.visible = false; });
   const fill = new THREE.PointLight('#c8d4f0', 0, 7, 2); scene.add(fill);
   const pracL = new THREE.PointLight('#ffc890', 0, 5, 2); scene.add(pracL);
@@ -399,20 +408,22 @@ export function buildWorld() {
     glass: { p: track([[0, B(-.75, 2.85, 2.5)], [24.5, B(-.45, 2.6, 2.05)]]), l: track([[0, B(1.2, 1.35, -.15)], [24.5, B(1.3, 1.4, -.18)]]), fov: 30 },
     inventory: { p: track([[0, B(1.6, 2.6, 4.2)], [18, B(4.2, 2.5, 3.8)]]), l: track([[0, B(2.2, 1.1, -.6)], [18, B(4.0, 1.0, -.7)]]), fov: 30 },
     tests: { p: track([[0, L(-.6, 3.1, 4.8)], [20, L(.1, 2.9, 4.3)]]), l: track([[0, L(.9, 1.0, -.2)], [20, L(1.3, 1.1, -.2)]]), fov: 32 },
-    nan1: { p: track([[0, N(1.6, 3.4, 5.6)], [50, N(1.0, 3.0, 4.8)]]), l: track([[0, N(-.6, 1.0, -.2)], [50, N(-.7, 1.0, -.2)]]), fov: 30 },
+    nan1: { p: track([[0, N(1.6, 3.4, 5.6)], [44, N(1.0, 3.0, 4.8)], [50, N(.6, 2.5, 3.9)]]), l: track([[0, N(-.6, 1.0, -.2)], [44, N(-.7, 1.0, -.2)], [50, N(-.6, 1.1, .3)]]), fov: 30 },
     morning2: { p: BATH_P, l: BATH_L, fov: 32 }, morning3: { p: BATH_P, l: BATH_L, fov: 32 }, morning4: { p: track([[0, B(-1.9, 4.0, 4.9)], [12, B(-1.5, 3.6, 4.2)]]), l: BATH_L, fov: 32 },
-    practice: { p: track([[0, L(1.6, 3.3, 4.4)], [5, L(1.2, 2.9, 3.9)], [18, L(1.0, 2.7, 3.6)]]), l: track([[0, L(.2, .8, .3)], [5, L(-.4, .8, .3)], [18, L(-.4, .8, .3)]]), fov: 30 },
+    practice: { p: track([[0, L(1.6, 3.3, 4.4)], [5, L(1.2, 2.9, 3.9)], [10.6, L(1.0, 2.7, 3.6)], [18, L(.45, 1.9, 2.5)]]), l: track([[0, L(.2, .8, .3)], [5, L(-.4, .8, .3)], [18, L(-.5, .85, .4)]]), fov: 30 },
+    practice2: { p: track([[0, L(1.5, 3.2, 4.3)], [27, L(.5, 2.0, 2.6)], [28, L(.48, 1.98, 2.58)]]), l: track([[0, L(-.3, .8, .3)], [28, L(-.5, .9, .4)]]), fov: track([[0, [32]], [28, [27]]]) },
     sit: { p: track([[0, B(1.5, 3.6, 7.0)], [28, B(1.5, 3.1, 5.9)]]), l: track([[0, B(1.5, .95, -.5)], [28, B(1.5, .95, -.5)]]), fov: 34 },
     habit: { p: track([[0, B(1.5, 8.4, 3.6)], [22, B(1.5, 7.6, 3.1)]]), l: track([[0, B(1.5, 0, -.35)], [22, B(1.5, 0, -.35)]]), fov: 36 },
-    roof: { p: track([[0, [ROOF.x + 2.4, ROOF.y + 2.2, ROOF.z + 3.6]], [9, [ROOF.x + 2.2, ROOF.y + 2.0, ROOF.z + 3.3]], [30, [ROOF.x + 16, ROOF.y + 20, ROOF.z + 46]], [38, [ROOF.x + 18, ROOF.y + 22, ROOF.z + 50]]]), l: track([[0, [ROOF.x, ROOF.y + .7, ROOF.z]], [9, [ROOF.x, ROOF.y + .7, ROOF.z]], [30, [ROOF.x - 4, ROOF.y - 4, ROOF.z - 12]], [38, [ROOF.x - 4, ROOF.y - 4, ROOF.z - 12]]]), fov: track([[0, [30]], [30, [36]], [38, [36]]]) },
+    roof: { p: track([[0, [ROOF.x + 2.4, ROOF.y + 2.2, ROOF.z + 3.6]], [7, [ROOF.x + 2.2, ROOF.y + 2.0, ROOF.z + 3.3]], [18, [ROOF.x + 16, ROOF.y + 20, ROOF.z + 46]], [20.6, [ROOF.x + 17, ROOF.y + 21, ROOF.z + 48]], [25, [ROOF.x - .6, ROOF.y + 3.4, ROOF.z + 12.8]], [38, [ROOF.x + .2, ROOF.y + 2.9, ROOF.z + 11.2]]]),
+      l: track([[0, [ROOF.x, ROOF.y + .7, ROOF.z]], [7, [ROOF.x, ROOF.y + .7, ROOF.z]], [18, [ROOF.x - 4, ROOF.y - 4, ROOF.z - 12]], [20.6, [ROOF.x - 4, ROOF.y - 4, ROOF.z - 12]], [25, [ROOF.x + 3.5, ROOF.y + 1.7, ROOF.z + 1.2]], [38, [ROOF.x + 3.5, ROOF.y + 1.7, ROOF.z + 1.2]]]), fov: track([[0, [30]], [18, [36]], [20.6, [36]], [25, [36]], [38, [33]]]) },
     empty: { p: track([[0, B(-1.9, 4.0, 4.9)], [5, B(-1.8, 3.9, 4.7)], [30, B(.15, 2.05, 1.35)]]), l: track([[0, B(1.0, 1.35, -.3)], [5, B(1.1, 1.4, -.3)], [30, B(1.5, 1.5, -.22)]]), fov: 32 },
-    nan2: { p: track([[0, N(1.2, 3.1, 4.9)], [20, N(.9, 2.9, 4.5)]]), l: track([[0, N(-.7, 1.0, -.2)], [20, N(-.8, 1.0, -.2)]]), fov: 30 },
+    nan2: { p: track([[0, N(.9, 2.7, 4.2)], [20, N(.3, 2.2, 3.2)]]), l: track([[0, N(-.4, .9, -.3)], [20, N(-.4, .9, -.3)]]), fov: 30 },
     postcard: { p: track([[0, B(-.6, 2.7, 2.8)], [5, B(.35, 2.0, .95)], [16, B(.55, 1.95, .7)], [24, B(.5, 1.95, .75)], [42, B(-1.9, 4.0, 4.9)]]), l: track([[0, B(1.3, 1.45, -.25)], [5, B(1.5, 1.7, .05)], [24, B(1.5, 1.7, .05)], [42, B(1.0, 1.35, -.3)]]), fov: track([[0, [32]], [5, [26]], [24, [26]], [42, [32]]]) },
-    notice: { p: track([[0, [NOTE.x + 3.6, 3.0, 2.0]], [12, [NOTE.x + 3.2, 2.9, 1.8]], [28, [POST.x + 2.8, 3.0, 1.9]]]), l: track([[0, [NOTE.x, 1.3, NOTE.z]], [12, [NOTE.x + .2, 1.3, NOTE.z]], [28, [POST.x - .6, 1.0, POST.z - .6]]]), fov: 30 },
+    notice: { p: track([[0, [NOTE.x + 4.6, 3.2, 2.4]], [6, [NOTE.x + 3.6, 3.0, 2.0]], [12, [NOTE.x + 2.0, 2.3, .2]], [18, [NOTE.x + 1.8, 2.2, 0]]]), l: track([[0, [NOTE.x + 1.2, 1.2, NOTE.z]], [6, [NOTE.x + .4, 1.3, NOTE.z]], [12, [NOTE.x - .1, 1.55, NOTE.z]], [18, [NOTE.x - .1, 1.6, NOTE.z]]]), fov: track([[0, [30]], [12, [28]], [18, [26]]]) },
     leave: { p: track([[0, B(-1.9, 4.0, 4.9)], [10, B(-1.6, 3.7, 4.4)]]), l: BATH_L, fov: 32 },
     door: { p: track([[0, L(.4, 3.0, 4.2)], [16, L(.1, 2.7, 3.7)]]), l: track([[0, L(-1.6, 1.0, .3)], [16, L(-1.7, 1.0, .3)]]), fov: 30 },
     train: { p: track([[0, [-60, 40, 96]], [16, [-36, 36, 90]]]), l: track([[0, [-30, 0, RAIL.z]], [16, [-8, 0, RAIL.z]]]), fov: 32 },
-    audition: { p: track([[0, A(1.2, 7.6, 6.6)], [5, A(1.3, 6.0, 6.6)], [20, A(.9, 3.5, 4.8)], [28, A(.8, 3.2, 4.3)]]), l: track([[0, A(0, .8, -1.2)], [28, A(0, 1.2, -1.2)]]), fov: track([[0, [34]], [28, [30]]]) },
+    audition: { p: track([[0, A(1.2, 7.6, 6.6)], [5, A(1.3, 6.0, 6.6)], [14, A(.9, 3.5, 4.8)], [22, A(.4, 1.95, 2.3)], [28, A(.5, 2.2, 2.7)], [33, A(1.0, 3.6, 5.0)]]), l: track([[0, A(0, .8, -1.2)], [14, A(0, 1.2, -1.2)], [22, A(0, 1.35, -1.1)], [33, A(0, 1.2, -1.2)]]), fov: track([[0, [34]], [14, [30]], [22, [26]], [33, [30]]]) },
     through: { p: track([[0, B(-1.9, 4.0, 4.9)], [3, B(-.6, 2.5, 2.4)], [5.95, B(1.38, 1.5, -.2)]]), l: track([[0, B(1.1, 1.4, -.3)], [3, B(1.4, 1.48, -.22)], [5.95, B(2.4, 1.5, -.2)]]), fov: track([[0, [32]], [5.95, [30]]]) },
     sea: { p: track([[0, S(-1.3, 3.2, 3.8)], [32, S(-.9, 2.75, 3.0)], [41, S(-1.6, 3.6, 4.6)]]), l: track([[0, S(1.0, 1.35, -.3)], [41, S(1.1, 1.42, -.3)]]), fov: 32 },
     endWide: { p: track([[0, P(2, 10, 22)], [14, P(26, 38, 92)]]), l: track([[0, P(-4, 6, -15)], [14, P(0, 4, -12)]]), fov: track([[0, [30]], [14, [36]]]) },
@@ -427,7 +438,7 @@ export function buildWorld() {
     scene.fog.color.copy(K.fog); scene.fog.density = K.fogD; renderer.toneMappingExposure = K.exp;
   }
   const KEY_OF = { open: 'bath', title: 'dawnT', glass: 'bath', inventory: 'bath', tests: 'flatD', nan1: 'nan', morning2: 'bath', walk: 'morning', morning3: 'bath', practice: 'flatN', morning4: 'bath', sit: 'bath', habit: 'bath', roof: 'night',
-    empty: 'bath', nan2: 'nan', postcard: 'bath', notice: 'morning', leave: 'bath', door: 'flatD', train: 'dawnT', audition: 'hall', through: 'bath', sea: 'seaIn', endWide: 'sea' };
+    empty: 'bath', nan2: 'nan', postcard: 'bath', notice: 'morning', practice2: 'flatN', leave: 'bath', door: 'flatD', train: 'dawnT', audition: 'hall', through: 'bath', sea: 'seaIn', endWide: 'sea' };
   const BATH = ['open', 'glass', 'inventory', 'morning2', 'morning3', 'morning4', 'sit', 'habit', 'empty', 'postcard', 'leave', 'through'];
   // the bulb: off until the click, then a swing that dies away; flicker at the empty mirror
   const CLICKS = [T.click0, T.click2, T.click3, T.click4, T.click5, T.click6, ...HABIT];
@@ -440,8 +451,9 @@ export function buildWorld() {
     if (k > 0) { const d = holeC.clone().sub(cam.position); if (Math.abs(d.x) > .05) { const s = (xm - cam.position.x) / d.x; z = lerp(sp.z, cam.position.z + d.z * s + (sp.z - holeC.z) * .5, k); } }
     place(Rc, xm, sp.y, z); Rc.face(cam, true);
   }
-  const lookOf = (t) => t < 175.5 ? 'fut0' : t < 200.5 ? 'fut0b' : t < 252 ? 'fut1' : 'fut2';
+  const lookOf = (t) => t < 175.5 ? 'fut0' : t < 200.5 ? 'fut0b' : t < 246 ? 'fut0' : t < 252 ? 'fut1' : 'fut2';
 
+  const poseGlass = t => t < T.left - .3 ? blinkOr(t, 'stare', 'blink') : t < T.left + 3.5 ? 'left' : t < T.touch ? blinkOr(t, 'idle0', 'blink') : t < 57 ? 'touch' : blinkOr(t, 'lean', 'blink');
   function update(t, shot, cam, post, renderer) {
     const lt = t - shot.a, id = shot.id;
     all.forEach(c => { c.root.visible = false; c.mesh.scale.x = 1; });
@@ -475,6 +487,10 @@ export function buildWorld() {
     }
     let hx = 0;
     if (id === 'walk') { hx = lerp(HB.x - 1.5, MUS.x + 2.0, ss(seg(t, 157.4, 174.6))); cam.position.set(hx + 1.2, 4.8, 5.4); look = V3(hx - 2.6, 1.3, -5.0); cam.fov = 32; }
+    if (id === 'roof' && lt >= 22.6) {   // hard cuts: Nan on her balcony, then Theo
+      if (lt < 32.3) { cam.position.set(BAL.x - 3.4, BAL.y + 1.0, BAL.z + 3.1); look = V3(BAL.x - .1, BAL.y + .9, BAL.z); cam.fov = 30; }
+      else { cam.position.set(ROOF.x + 2.3, ROOF.y + 1.9, ROOF.z + 3.3); look = V3(ROOF.x + .1, ROOF.y + .78, ROOF.z); cam.fov = 30; }
+    }
     if (look) cam.lookAt(look);
     sunT.position.copy(look || V3(0, 0, 0)); sunT.position.y = 0;
     applyKey(K, renderer);
@@ -503,28 +519,29 @@ export function buildWorld() {
       const refl = fut[lookOf(t)];
       // the man in the glass: what's in the future room
       const empty = (id === 'empty' && t >= T.empty) || id === 'postcard' || id === 'leave' || id === 'through';
-      BM.badge.visible = t < 175.5; BM.case.visible = t < 200.5 && !empty; BM.caseOpen.visible = t >= 200.5 && !empty; BM.sheet.visible = t >= 240 && !empty;
+      BM.badge.visible = t < 246; BM.case.visible = t < 252 && !empty; BM.caseOpen.visible = t >= 252 && !empty; BM.sheet.visible = t < 249 && !empty;
       if (empty) { BM.towel.visible = false; BM.cup.visible = false; BM.postcard.visible = true; }
       if (id === 'leave' || id === 'through') { BR.boxes.visible = id === 'leave'; BR.case.visible = false; BR.cup.visible = id === 'leave' ? false : false; BR.towel.visible = false; }
       let hf = 'idle0', at = V3(BA.x + .78, 0, BA.z + .05);
       const sink = V3(BA.x + .78, 0, BA.z + .05);
       if (id === 'open') {
         const k = ss(seg(t, T.walkIn[0], T.walkIn[1])); at = V3(lerp(BA.x - .9, sink.x, k), 0, lerp(BA.z + .9, sink.z, k));
-        hf = t < T.walkIn[1] ? walk4(t, 6) : t < T.yawn + 1.6 ? (t > T.yawn ? 'yawn' : 'idle0') : t < 9.4 ? blinkOr(t, 'idle0', 'blink') : t < 14.6 ? 'wide' : t < 16.6 ? (t < 15.6 ? 'stare' : 'lean') : t < T.wave ? 'lean' : t < 21.6 ? (Math.floor(t * 2.4) % 2 ? 'wave' : 'wave2') : blinkOr(t, 'stare', 'blink');
+        hf = t < T.walkIn[1] ? walk4(t, 6) : t < T.yawn + 1.6 ? (t > T.yawn ? 'yawn' : 'idle0') : t < 9.4 ? blinkOr(t, 'idle0', 'blink') : t < 14.6 ? 'wide' : t < 16.6 ? (t < 15.6 ? 'stare' : 'lean') : t < T.wave ? 'lean' : t < T.palm + .4 ? (Math.floor(t * 2.4) % 2 ? 'wave' : 'wave2') : t < T.recoil ? 'stare' : t < T.recoil + 1.4 ? 'recoil' : blinkOr(t, 'worry', 'worryF');
         if (t < T.walkIn[0]) at = V3(BA.x - 2, 0, BA.z + 1.6);
+        if (t > T.recoil) { const k2 = ss(seg(t, T.recoil, T.recoil + .7)); at = V3(sink.x - .45 * k2, 0, sink.z + .25 * k2); }
       } else if (id === 'glass') {
-        hf = t < T.left - .3 ? blinkOr(t, 'stare', 'blink') : t < T.left + 3.5 ? 'left' : t < T.touch ? blinkOr(t, 'idle0', 'blink') : t < 57 ? 'touch' : blinkOr(t, 'lean', 'blink');
+        hf = poseGlass(t);
       } else if (id === 'inventory') { hf = blinkOr(t, 'lean', 'blink'); }
       else if (id === 'morning2') { hf = t < T.click2 + .6 ? 'idle0' : Math.floor(t * 3) % 2 ? 'brush' : 'idle0'; if (t > 153) hf = Math.floor(t * 3) % 2 ? 'brush' : 'yawn'; }
       else if (id === 'morning3') { hf = t < T.click3 + 1.2 ? 'idle0' : blinkOr(t, 'stare', 'blink'); }
-      else if (id === 'morning4') { hf = t < T.click4 + .8 ? 'idle0' : t < 205.4 ? 'stare' : t < 207 ? 'wide' : blinkOr(t, 'smile', 'smileBlink'); }
+      else if (id === 'morning4') { hf = t < T.click4 + .8 ? 'idle0' : t < T.away + .6 ? blinkOr(t, 'stare', 'blink') : t < 206.6 ? 'worry' : t < 209.2 ? (Math.floor(t * 2.6) % 2 ? 'call' : 'talkO') : blinkOr(t, 'worryF', 'flatBlink'); }
       else if (id === 'sit') { at = V3(BA.x - .45, .22, BA.z - BD / 2 + .82); hf = blinkOr(t, t > 232 ? 'sitSmile' : 'sit', 'sitBlink'); }
       else if (id === 'habit') {
         const i = Math.max(0, HABIT.filter(a => a <= t).length - 1), poses = ['brush', 'yawn', 'idle0', 'smile', 'brush', 'left', 'smile', 'wave', 'smile'];
         hf = poses[i % poses.length];
       } else if (id === 'empty') {
         const k = ss(seg(t, T.click5 + .3, T.click5 + 2.4)); at = V3(lerp(BA.x - .9, sink.x, k), 0, lerp(BA.z + .9, sink.z, k));
-        hf = k < 1 ? walk4(t, 6) : t < T.empty ? blinkOr(t, 'smile', 'smileBlink') : t < 312 ? 'wide' : (t > 314.4 && t < 315.4) || (t > 317.2 && t < 318.4) ? 'talk' : t < T.runOut ? blinkOr(t, 'worry', 'worryF') : walk4(t, 9);
+        hf = k < 1 ? walk4(t, 6) : t < T.empty ? blinkOr(t, 'smile', 'smileBlink') : t < 312 ? 'wide' : (t > 314.6 && t < 315.6) || (t > 317.2 && t < 318.6) ? 'talk' : t < T.runOut ? blinkOr(t, 'worry', 'worryF') : walk4(t, 9);
         if (t > T.runOut) { const k2 = ss(seg(t, T.runOut, T.runOut + 2.4)); at = V3(lerp(sink.x, BA.x - 1.2, k2), 0, lerp(sink.z, BA.z + 1.4, k2)); theo.root.visible = true; }
       } else if (id === 'postcard') {
         const k = ss(seg(t, 350.0, 351.6)); at = V3(lerp(BA.x - .6, sink.x, k), 0, lerp(BA.z + .9, sink.z, k));
@@ -534,9 +551,15 @@ export function buildWorld() {
         place(theo, at.x, at.y, at.z); theo.frame(hf); theo.face(cam, (id === 'empty' && t > T.runOut) || (id === 'postcard' && t < 351.6 && false));
         if (id === 'empty' && t > T.runOut) theo.mesh.scale.x = -1;
         if (!empty) {
-          refl.frame(refl.atlas.names.includes(hf) ? hf : 'idle0');
+          // the man in the glass: a copy, except when he isn't (the first morning, the lag, the morning he turns away)
+          let rf = hf, src = theo;
+          if (id === 'open' && t > T.notice) { rf = t < T.palm ? blinkOr(t, 'stare', 'blink', .37) : blinkOr(t, 'palm', 'palmB', .9); src = { root: { position: sink } }; }
+          if (id === 'glass' && t > T.left - 1 && t < T.left + 6) rf = poseGlass(t - T.lag);
+          if (id === 'morning4' && t > T.away) { rf = blinkOr(t, 'worryF', 'flatBlink', .5); src = { root: { position: sink } }; }
+          refl.frame(refl.atlas.names.includes(rf) ? rf : 'idle0');
           const cut = id === 'sit' || id === 'habit' || id === 'inventory';
-          mirrorChar(refl, theo, BA.x + BW / 2, H0, cam, cut ? 0 : 1);
+          mirrorChar(refl, src, BA.x + BW / 2, H0, cam, cut ? 0 : 1);
+          if (id === 'morning4' && t > T.away) { const k3 = ss(seg(t, T.away, T.away + .5)); refl.mesh.scale.x = k3 > .5 ? 1 : -1; refl.root.position.x += .1 * k3; }
           // a reflection walking in from the left of the glass only appears once it is at the sink
           if (id === 'open' && t < T.walkIn[1] - .8) refl.root.visible = false;
           if (id === 'empty' && t < T.empty) { refl.root.visible = t > T.click5 + 2.0; }
@@ -570,15 +593,16 @@ export function buildWorld() {
       const sink = V3(SB.x + .78, 0, SB.z + .05), H0 = V3(SB.x + HOLE_C.x, HOLE_C.y, SB.z + HOLE_C.z);
       if (id === 'sea') {
         const k = ss(seg(t, T.click6 + .4, T.click6 + 3.4)); place(theoS, lerp(SB.x - .9, sink.x, k), 0, lerp(SB.z + .9, sink.z, k));
-        theoS.frame(k < 1 ? walk4(t, 6) : t < 512.0 ? blinkOr(t, 'idle0', 'blink') : t < 515.6 ? 'stare' : t < T.waves[0] ? blinkOr(t, 'smile', 'smileBlink') : t < T.waves[1] ? (Math.floor(t * 2.2) % 2 ? 'waveS' : 'waveS2') : blinkOr(t, 'smile', 'smileBlink'));
+        theoS.frame(k < 1 ? walk4(t, 6) : t < 515.0 ? blinkOr(t, 'idle0', 'blink') : t < T.waveR + 1.2 ? 'stare' : t < T.waves[0] ? 'wide' : t < T.waves[1] ? (Math.floor(t * 2.2) % 2 ? 'waveS' : 'waveS2') : blinkOr(t, 'smile', 'smileBlink'));
         theoS.face(cam, false);
-        const r = fut.fut3; r.frame(theoS.cur); mirrorChar(r, theoS, SB.x + BW / 2, H0, cam, 1); if (k < .8) r.root.visible = false;
-        focusOn = t < 512 ? theoS.root.position.clone().add(V3(0, 1.3, 0)) : H0.clone().add(V3(.7, 0, 0));
+        const r = fut.fut3, ind = t > T.waveR - .2 && t < T.waves[1];
+        r.frame(ind ? (Math.floor(t * 2.2) % 2 ? 'waveS' : 'waveS2') : theoS.cur); mirrorChar(r, theoS, SB.x + BW / 2, H0, cam, 1); if (k < .8) r.root.visible = false;
+        focusOn = t < 515 ? theoS.root.position.clone().add(V3(0, 1.3, 0)) : H0.clone().add(V3(.7, 0, 0));
       } else focusOn = H0.clone();
     }
     // ——— the flat ———
-    if (id === 'tests' || id === 'practice' || id === 'door') {
-      const day = id !== 'practice';
+    if (id === 'tests' || id === 'practice' || id === 'practice2' || id === 'door') {
+      const day = id !== 'practice' && id !== 'practice2';
       FL.win.material.color.set(day ? '#c8d8ec' : '#141c2c');
       fill.position.copy(LR).add(V3(.2, 2.0, 2.4)); fill.intensity = day ? .9 : 1.3; fill.color.set(day ? '#fff0e0' : '#7a94d0');
       lampL.intensity = day ? .4 : 2.2; lampLM.intensity = day ? 2.0 : lampL.intensity * .8; lampG.visible = true;
@@ -594,19 +618,26 @@ export function buildWorld() {
         focusOn = theo.root.position.clone().add(V3(0, 1.1, 0));
       } else if (id === 'practice') {
         FL.case.visible = t < T.caseOpen; FL.caseOpen.visible = t >= T.caseOpen; FL.stool.visible = true;
-        let f = t < T.caseOpen ? 'reach' : t < T.play[0] ? blinkOr(t, 'sitSmile', 'sitBlink') : t > T.thump && t < T.thump + 2.0 ? (t < T.thump + .3 ? 'playRest' : 'sitFlat') : t < T.play[1] ? (Math.floor(t * 1.6) % 2 ? 'play0' : 'play1') : 'playRest';
+        let f = t < T.caseOpen ? 'reach' : t < T.play[0] ? blinkOr(t, 'sitSmile', 'sitBlink') : t < T.stop ? (Math.floor(t * 2.2) % 2 ? 'play0o' : 'play1o') : t < 193.0 ? 'playStop' : t < 194.8 ? 'playTalk' : t < 195.6 ? 'playStopB' : 'playSlump';
         if (t < T.caseOpen) place(theo, LR.x + .6, 0, LR.z + .8); else place(theo, LR.x - .55, .15, LR.z + .5);
         if (t >= T.caseOpen) FL.caseOpen.visible = true;
         theo.frame(f); theo.face(cam, false); pracL.position.copy(theo.root.position).add(V3(.9, 1.3, 1.1)); pracL.intensity = 2.4;
+        focusOn = theo.root.position.clone().add(V3(0, .9, 0));
+      } else if (id === 'practice2') {
+        FL.case.visible = false; FL.caseOpen.visible = true; FL.stool.visible = true;
+        place(theo, LR.x - .55, .15, LR.z + .5);
+        theo.frame(t < T.play2[0] ? blinkOr(t, 'playRest', 'sitBlink') : t < T.play2[1] ? (Math.floor(t * (t > 408 ? 2.6 : 1.9)) % 2 ? 'play0' : 'play1') : 'playRest');
+        theo.face(cam, false); pracL.position.copy(theo.root.position).add(V3(.9, 1.3, 1.1)); pracL.intensity = 2.6 + .4 * Math.sin(t * 1.3);
+        lampL.intensity = 1.2;
         focusOn = theo.root.position.clone().add(V3(0, .9, 0));
       } else {
         FL.boxes.visible = true; FL.case.visible = false;
         FL.door.rotation.y = -1.3;
         const tk = T.scarf;
         const th = t < tk + 2 ? theo : theoScarf;
-        place(th, LR.x - RW / 2 + .7, 0, LR.z + .55); th.frame(t < 433.4 ? blinkOr(t, 'caseIdle', 'caseBlink') : t < 436.6 ? 'caseSmile' : t < 437.8 ? 'talk' : t < tk ? 'smile' : t < tk + 2 ? 'scarfGet' : blinkOr(t, 'caseSmile', 'caseBlink'));
+        place(th, LR.x - RW / 2 + .7, 0, LR.z + .55); th.frame(t < 433.4 ? blinkOr(t, 'caseIdle', 'caseBlink') : t < 437.2 ? 'caseSmile' : t < 439.0 ? 'talk' : t < tk ? 'smile' : t < tk + 2 ? 'scarfGet' : blinkOr(t, 'caseSmile', 'caseBlink'));
         th.face(cam, true); th.mesh.scale.x = -1;
-        place(nan, LR.x - RW / 2 - .55, 0, LR.z + .6); nan.frame(t < 433.4 ? idle(t) : t < 435.4 ? 'scarfTalk' : t < tk + .4 ? 'scarf' : blinkOr(t, 'smile', 'smileBlink')); nan.face(cam, false);
+        place(nan, LR.x - RW / 2 - .55, 0, LR.z + .6); nan.frame(t < 433.4 ? idle(t) : t < 436.8 ? 'scarfTalk' : t < tk + .4 ? 'scarf' : blinkOr(t, 'smile', 'smileBlink')); nan.face(cam, false);
         focusOn = V3(LR.x - RW / 2, 1.1, LR.z + .55);
       }
     }
@@ -619,16 +650,32 @@ export function buildWorld() {
       if (id === 'nan1') {
         if (t < 100.9) { const k = ss(seg(t, 100.0, 100.9)); tx = lerp(NF.x - 2.8, tx, k); tf = walk4(t, 7); }
         else tf = sp('t') ? 'talk' : t > 127 ? blinkOr(t, 'flat', 'flatBlink') : idle(t);
-        if (t > 145) { const k = ss(seg(t, 145.4, 149.2)); tx = lerp(NF.x - 1.55, NF.x - 3.0, k); tf = k > 0 && k < 1 ? walk4(t, 6) : tf; }
+        if (t > 145) { const k = ss(seg(t, 145.0, 146.0)); tx = lerp(NF.x - 1.55, NF.x - 2.1, k); tf = k > 0 && k < 1 ? walk4(t, 6) : tf; }
+        if (t > T.cough1[0]) tf = t < 148.2 ? blinkOr(t, 'worry', 'worryF') : tf;
+        if (t > 148.2) { const k = ss(seg(t, 148.2, 150)); tx = lerp(NF.x - 2.1, NF.x - 3.0, k); tf = walk4(t, 6); }
       } else {
         if (t < 330.8) { const k = ss(seg(t, 330.0, 330.8)); tx = lerp(NF.x - 2.8, tx, k); tf = walk4(t, 9); }
         else tf = sp('t') ? (t < 334 ? 'talkO' : 'talk') : blinkOr(t, 'worry', 'worryF');
+        if (t < 330.8) tf = walk4(t, 9);
         if (t > T.back) { const k = ss(seg(t, T.back, T.back + 2.6)); tx = lerp(NF.x - 1.55, NF.x - 3.0, k); tf = k < 1 ? walk4(t, 9) : tf; }
       }
+      if (id === 'nan2') {   // Nan in her armchair, a blanket over her knees; Theo standing beside her
+        tx = NF.x + .42; tz = NF.z - .12;
+        if (t < 330.8) { const k = ss(seg(t, 330.0, 330.8)); tx = lerp(NF.x - 1.2, tx, k); }
+        if (t > T.back) { const k = ss(seg(t, T.back, T.back + 2.6)); tx = lerp(NF.x + .42, NF.x - 2.6, k); tz = lerp(tz, NF.z + .7, k); }
+      }
       place(theo, tx, 0, tz); theo.frame(tf); theo.face(cam, false);
-      if ((id === 'nan1' && t > 145.4) || (id === 'nan2' && t > T.back)) theo.mesh.scale.x = -1;
-      place(nan, NF.x - .2, 0, NF.z + .55); nan.frame(sp('a') ? (id === 'nan1' ? 'cupTalk' : 'talk') : blinkOr(t, id === 'nan1' ? 'cup' : (t > 341 ? 'smile' : 'idle0'), 'blink', .7)); nan.face(cam, true); nan.mesh.scale.x = -1;
-      focusOn = V3(NF.x - .9, 1.1, NF.z + .55);
+      if ((id === 'nan1' && t > 145.0 && !(t > T.cough1[0] && t < 148.2)) || (id === 'nan2' && (t < 330.8 ? false : true))) theo.mesh.scale.x = -1;
+      if (id === 'nan2' && t < 330.8) theo.mesh.scale.x = 1;
+      if (id === 'nan1') {
+        place(nan, NF.x - .2, 0, NF.z + .55);
+        nan.frame(t > T.cough1[0] && t < T.cough1[1] ? (Math.floor(t * 5) % 2 ? 'cough' : 'cough2') : sp('a') ? 'cupTalk' : blinkOr(t, 'cup', 'blink', .7)); nan.face(cam, true); nan.mesh.scale.x = -1;
+        focusOn = V3(NF.x - .9, 1.1, NF.z + .55);
+      } else {
+        place(nanB, NF.x - .6, .2, NF.z - .42);
+        nanB.frame(t > 333.1 && t < 334.4 ? 'sitCough' : sp('a') ? 'sitTalk' : blinkOr(t, t > 346.6 ? 'sitSmile' : 'sitWorry', 'sitBlink', .7)); nanB.face(cam, false);
+        focusOn = V3(NF.x - .1, 1.0, NF.z - .2);
+      }
     }
     // ——— Main Street ———
     if (id === 'walk') {
@@ -637,23 +684,26 @@ export function buildWorld() {
       focusOn = theo.root.position.clone().add(V3(0, 1, 0));
     }
     if (id === 'notice') {
-      let x = NOTE.x + 1.0, f = blinkOr(t, 'stare', 'blink');
-      if (t < 394) { const k = ss(seg(t, 392.0, 394.0)); x = lerp(NOTE.x + 4, x, k); f = walk4(t, 6); }
-      else if (t > 400 && t < 401.4) f = 'talk';
+      let x = NOTE.x + 1.0, f = blinkOr(t, t > 171 ? 'worryF' : 'stare', 'blink');
+      if (t < 160.4) { const k = ss(seg(t, 157.0, 160.4)); x = lerp(NOTE.x + 5, x, k); f = walk4(t, 6); }
+      else if (t > 168.8 && t < 170.2) f = 'talk';
       if (t > 401.6) { const k = ss(seg(t, 401.6, T.post[0])); x = lerp(NOTE.x + 1.0, POST.x - .55, k); f = k < 1 ? walk4(t, 6) : t < T.post[1] + .4 ? 'letter' : blinkOr(t, 'smile', 'smileBlink'); }
       const z = t > 401.6 ? lerp(-4.4, POST.z - .1, ss(seg(t, 401.6, T.post[0]))) : -4.4;
       place(theo, x, .14, z); theo.frame(f); theo.face(cam, t < 394); if (t < 394) theo.mesh.scale.x = -1;
-      folk.slice(2, 5).forEach((fk, i) => { const xx = NOTE.x + 9 - ((t - 392) * (1 + i * .3)) % 22; place(fk, xx, .14, -3.7 - i * .4); fk.frame(walk4(t + i * .3, 6)); fk.face(cam, true); fk.mesh.scale.x = -1; });
+      folk.slice(2, 5).forEach((fk, i) => { const xx = NOTE.x + 9 - ((t - 150) * (1 + i * .3)) % 22; place(fk, xx, .14, -3.7 - i * .4); fk.frame(walk4(t + i * .3, 6)); fk.face(cam, true); fk.mesh.scale.x = -1; });
       focusOn = theo.root.position.clone().add(V3(0, 1.1, 0));
     }
     // ——— the roof ———
     if (id === 'roof') {
       roofLamp.position.copy(ROOF).add(V3(.55, .7, .55)); roofLamp.intensity = 3.2 * flick(t, 2); lanternG.visible = true;
       fill.position.copy(ROOF).add(V3(1.5, 1.5, 2.4)); fill.intensity = .8; fill.color.set('#7a94d0');
-      place(theo, ROOF.x, ROOF.y + .2, ROOF.z + .05); theo.frame(t < T.roofPlay[0] ? 'playRest' : (Math.floor(t * 1.6) % 2 ? 'play0' : 'play1')); theo.face(cam, false);
-      if (t > T.nanWin - 1.2) { balL.intensity = 2.0; place(nan, BAL.x - .1, BAL.y, BAL.z); nan.frame(t < 289 ? 'idle0' : t < 290.8 ? 'call' : blinkOr(t, 'call2', 'smileBlink')); nan.face(cam, true); nan.mesh.scale.x = -1; }
-      focusOn = lt < 12 ? theo.root.position.clone().add(V3(0, .8, 0)) : null;
-      if (lt >= 12) tiltC = .42;
+      place(theo, ROOF.x, ROOF.y + .2, ROOF.z + .05); theo.face(cam, false);
+      theo.frame(t < T.roofPlay[0] ? 'playRest' : t < T.roofPlay[1] ? (Math.floor(t * 1.6) % 2 ? 'play0' : 'play1') : t < T.cough2[0] + .3 ? blinkOr(t, 'playRest', 'sitBlink') : t < 294.3 ? 'playStop' : t < 296 ? 'playTalk' : 'playStopB');
+      const on = t > T.nanWin - 1.2 && t < T.nanOut;
+      balW.material.color.set('#ffc890').multiplyScalar(t < T.nanOut ? (lt > 22 ? .9 : 1.6) : t < T.nanOut + .12 ? .4 : .04);
+      if (on) { balL.intensity = 2.0; place(nan, BAL.x - .1, BAL.y, BAL.z); nan.frame(t < 287.2 ? 'idle0' : t < 289.4 ? 'call' : t < T.cough2[0] ? 'call2' : (Math.floor(t * 5) % 2 ? 'cough' : 'cough2')); nan.face(cam, true); nan.mesh.scale.x = -1; }
+      focusOn = lt < 9 || lt >= 32.3 ? theo.root.position.clone().add(V3(0, .8, 0)) : lt >= 22.6 ? V3(BAL.x - .1, BAL.y + .95, BAL.z) : null;
+      if (lt >= 9 && lt < 22.6) tiltC = .42;
     }
     // ——— the train ———
     if (id === 'train') { train.position.x = lerp(-90, 75, ss(seg(t, T.trainIn - 1, 461.5)) * .9 + seg(t, T.trainIn - 1, 461.5) * .1); train.children.forEach(c => { c.userData.winM.emissiveIntensity = 1.2; }); focusOn = V3(train.position.x - 20, 2, RAIL.z); tiltC = .45; }
@@ -663,9 +713,13 @@ export function buildWorld() {
       const k = ss(seg(t, 462.4, T.chair)); spot.intensity = 70; deskL.intensity = .6;
       fill.position.copy(AH).add(V3(.6, 2.2, 1.6)); fill.intensity = .35; fill.color.set('#ffd8b0');
       if (k < 1) { place(theo, lerp(AH.x - 3.6, AH.x - .2, k), .6, AH.z - 1.1); theo.frame(walk4(t, 6, 'wc')); }
-      else { place(theo, AH.x - .05, .78, AH.z - 1.05); theo.frame(t < T.solo[0] ? blinkOr(t, 'playRest', 'sitBlink') : t < T.solo[1] ? (Math.floor(t * 1.4) % 2 ? 'play0' : 'play1') : t < 485 ? 'play1o' : 'playRest'); }
+      else {
+        place(theo, AH.x - .05, .78, AH.z - 1.05);
+        theo.frame(t < T.solo[0] ? blinkOr(t, 'playRest', 'sitBlink') : t < T.snap ? (Math.floor(t * 1.5) % 2 ? 'play0' : 'play1') : t < 478.6 ? 'playStop' : t < 482.2 ? blinkOr(t, 'playStopB', 'playStop') : t < 483.8 ? 'playTalk' : t < T.resume ? 'playStopB' : t < T.soloEnd ? (Math.floor(t * 2.0) % 2 ? 'play0' : 'play1') : t < 491.4 ? 'play1o' : 'playRest');
+      }
       theo.face(cam, false);
-      panel.forEach((p, i) => { place(p, AH.x - 2.4 + i * .8, 0, AH.z + 3.9); p.frame('sit'); p.face(cam, false); });
+      panel.forEach((p, i) => { place(p, AH.x - 2.4 + i * .8, 0, AH.z + 3.9); p.frame(i === 1 && t > 478.4 && t < 480.6 ? 'lean' : 'sit'); p.face(cam, false); });
+      if (t > T.snap && t < T.resume) { spot.intensity = 70 * (1 - .18 * ss(seg(t, T.snap, T.snap + 3))); }
       focusOn = theo.root.position.clone().add(V3(0, .9, 0));
     }
     // ——— the wides ———
@@ -675,10 +729,11 @@ export function buildWorld() {
     cam.updateProjectionMatrix();
     const fo = focusOn || look || V3(0, 0, 0);
     post.dof.focus = cam.position.distanceTo(fo);
-    const far = ['title', 'endWide', 'train'].includes(id) || (id === 'roof' && lt > 12);
+    const far = ['title', 'endWide', 'train'].includes(id) || (id === 'roof' && lt > 12 && lt < 22.6);
     post.dof.aper = far ? 420 : 240; post.dof.maxCoc = far ? 20 : 16;
     if (id === 'glass' || id === 'postcard' || id === 'through') { post.dof.aper = 120; post.dof.maxCoc = 12; }
-    post.bloom.strength = night || KEY_OF[id] === 'hall' ? .75 : BATH.includes(id) ? .6 : .45; post.bloom.threshold = night ? .78 : .86;
+    if ((id === 'audition' && t > T.snap && t < T.resume + 1) || id === 'practice2' || id === 'nan2') { post.dof.aper = 150; post.dof.maxCoc = 14; }
+    post.bloom.strength = id === 'roof' && lt > 22 ? .5 : night || KEY_OF[id] === 'hall' ? .75 : BATH.includes(id) ? .6 : .45; post.bloom.threshold = night ? .78 : .86;
     post.vig.uniforms.warm.value = KEY_OF[id] === 'nan' ? .2 : id === 'sea' || id === 'endWide' ? .04 : .1;
     post.vig.uniforms.amt.value = night || BATH.includes(id) || KEY_OF[id] === 'hall' ? .66 : .55;
     const band = id === 'endWide' ? 1 - ss(seg(t, 548, 554)) * .6 : 1;

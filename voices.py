@@ -1,5 +1,5 @@
-# Voices: Kokoro (offline) for every line, except the lines whose voice is a Microsoft neural voice ("en-US-…Neural"),
-# which go through edge-tts (online). Both write voices/<id>.wav; the durations are merged into voices/dur.json.
+# Voices: Microsoft neural voices ("…Neural") through edge-tts; any line with a Kokoro voice would go through Kokoro (offline),
+# and each writes voices/<id>.wav; the durations are merged into voices/dur.json.
 # Usage: <LIB>/.venv/bin/python voices.py
 import os, sys, json, subprocess, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
